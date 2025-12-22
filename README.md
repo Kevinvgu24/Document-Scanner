@@ -4,38 +4,38 @@ A local program using external camera to scanning documents and image then save 
 
 Please read the comments code inside the program to understand how the code runs. You can read documents on OpenCV for more detailed information.
 
-STEP 1: Download and Extract OpenCV
-  Go to the homepage: opencv.org/releases
+  STEP 1: Download and Extract OpenCV
+    Go to the homepage: opencv.org/releases
   
-  Select the latest version (e.g., 4.10.0 or 4.8.0).
+    Select the latest version (e.g., 4.10.0 or 4.8.0).
   
-  Click the Windows button to download the .exe file.
+    Click the Windows button to download the .exe file.
   
-  Run the .exe file. It will ask where to extract it.
+    Run the .exe file. It will ask where to extract it.
   
-  Recommended: Extract to the root drive for a shorter path. For example: C:\ or D:\.
+    Recommended: Extract to the root drive for a shorter path. For example: C:\ or D:\.
   
-  After extraction, you will have the folder: C:\opencv.
+    After extraction, you will have the folder: C:\opencv.
+    
+  STEP 2: Install Environment Variables
+    This step helps Windows find the OpenCV .dll file when you run the program. If you skip this step, the program will report an error "Missing       opencv_world...dll".
 
-STEP 2: Install Environment Variables
-  This step helps Windows find the OpenCV .dll file when you run the program. If you skip this step, the program will report an error "Missing       opencv_world...dll".
+    Press the Windows key, type "Edit the system environment variables," and press Enter.
 
-  Press the Windows key, type "Edit the system environment variables," and press Enter.
+    Select the Environment Variables button...
 
-  Select the Environment Variables button...
+    In the frame below (System variables), find the line Path -> Select Edit.
 
-  In the frame below (System variables), find the line Path -> Select Edit.
+    Click New and paste the OpenCV bin folder path.
 
-  Click New and paste the OpenCV bin folder path.
+    The path is usually: C:\opencv\build\x64\vc16\bin
 
-  The path is usually: C:\opencv\build\x64\vc16\bin
+    (Note: vc16 is for VS 2019/2022. If there is a vc17 folder later, choose the newest one.)
 
-  (Note: vc16 is for VS 2019/2022. If there is a vc17 folder later, choose the newest one.)
+    Click OK repeatedly to close all windows.
 
-  Click OK repeatedly to close all windows.
-
-  Important: Restart your computer (or sign out) for Windows to recognize the new path.
-
+    Important: Restart your computer (or sign out) for Windows to recognize the new path.
+    
   STEP 3: Configuration in Visual Studio
   Now you can open your Project DocumentScanner.
 
@@ -54,8 +54,8 @@ STEP 2: Install Environment Variables
     Go to: C/C++ -> General.
 
     In the Additional Include Directories line: Click the arrow -> Edit -> Add the path: C:\opencv\build\include
-
-4. Add the Library folder (containing the .lib file).
+    
+  4. Add the Library folder (containing the .lib file).
 
     Go to: Linker -> General.
 
