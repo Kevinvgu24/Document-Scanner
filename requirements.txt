@@ -1,0 +1,8 @@
+# Document Scanner Requirements
+# CPU Version (Default)
+opencv-python==4.10.0.84
+
+# For GPU version, please install:
+# - CUDA libraries (version depends on your GPU)
+# - Pre-build environments with Visual Studio 2026
+# - Then install opencv-contrib-python instead
