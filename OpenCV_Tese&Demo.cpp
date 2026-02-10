@@ -1,4 +1,4 @@
-﻿#include <opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>
 #include <vector>
 #include <iostream>
 #include "DocumentScanner.hpp"
@@ -7,21 +7,26 @@ using namespace cv;
 using namespace std;
 
 int main() {
-    cout << "Khoi tao Scanner (CPU Mode + PDF Export)..." << endl;
+    cout << "Initializing Scanner (Optimized for Canon 2000D)..." << endl;
     DocumentScanner scanner;
-    cout << "He thong san sang! Nhan 's' de luu anh va PDF." << endl;
+    cout << "System ready. Press 's' to scan and save." << endl;
 
-    VideoCapture cap(1, CAP_DSHOW);
+    VideoCapture cap(0, CAP_DSHOW);
     if (!cap.isOpened()) {
-        cap.open(0, CAP_DSHOW);
+        cap.open(1, CAP_DSHOW);
         if (!cap.isOpened()) {
-            cout << "Khong mo duoc Camera!" << endl;
+            cout << "Error: Cannot open Camera!" << endl;
             return -1;
         }
     }
 
+    // Set resolution to Full HD (1920x1080) for Canon 2000D
     cap.set(CAP_PROP_FRAME_WIDTH, 1920);
     cap.set(CAP_PROP_FRAME_HEIGHT, 1080);
+
+    // Print actual resolution
+    cout << "Camera Resolution: " << cap.get(CAP_PROP_FRAME_WIDTH)
+        << "x" << cap.get(CAP_PROP_FRAME_HEIGHT) << endl;
 
     Mat imgOriginal, imgContour, imgDebug;
     vector<Point> docPoints;
@@ -36,10 +41,10 @@ int main() {
 
         imgContour = imgOriginal.clone();
 
-        // Xử lý tìm giấy
+		// Phát hiện tài liệu trong khung hình
         imgDebug = scanner.detectDocument(imgOriginal, docPoints);
 
-        // Vẽ kết quả
+		// Phể hiện kết quả lên khung hình chính
         if (!docPoints.empty()) {
             vector<vector<Point>> conPoly{ docPoints };
             drawContours(imgContour, conPoly, 0, Scalar(0, 255, 0), 4);
@@ -48,7 +53,8 @@ int main() {
             putText(imgContour, "DOC FOUND", docPoints[0], FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0), 2);
         }
 
-        // Tính FPS
+		// 3. Tính toán FPS (do giới hạn phần cứng của máy ảnh canon 2000D 
+        // chỉ có thể quay ở định dạng full HD với 30 FPS nên số FPS sẽ luôn dưới 30 dù máy tính có thể sử lý hơn thế)
         frameCounter++;
         double currentTime = (double)getTickCount();
         if (frameCounter >= 10) {
@@ -61,26 +67,23 @@ int main() {
         putText(imgContour, "FPS: " + to_string((int)fps), Point(20, 45), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 255), 2);
 
         imshow("Scanner Preview", imgContour);
-        // if (!imgDebug.empty()) imshow("Debug Threshold", imgDebug); // Bật nếu cần debug
 
         char key = (char)waitKey(1);
-        if (key == 27) break; // ESC
+        if (key == 27) break; // ESC to exit
 
-        // --- NHẤN 's' ĐỂ LƯU ---
+        // 4. Lưu quá trình
         if (key == 's' && !docPoints.empty()) {
-            cout << ">>> Dang xu ly..." << endl;
-
-            // 1. Cắt và xử lý ảnh
+            cout << ">>> Processing image..." << endl;
+            // The scanner class handles channel splitting internally.
             Mat scannedDoc = scanner.getWarpedImage(imgOriginal, docPoints);
 
-            // Hiện kết quả tạm thời
-            imshow("Scanned Result", scannedDoc);
+            imshow("Scanned Result (Preview)", scannedDoc);
+            cout << "Review the result window. Saving..." << endl;
 
-            // Tạo tên file mặc định theo thời gian
             string timeStr = to_string((long long)time(0));
             string defaultName = "Scan_" + timeStr;
 
-            // 2. Mở hộp thoại chọn vị trí lưu ảnh PNG
+            // Lưu png
             string pngPath = DocumentScanner::getSaveFilePath(
                 defaultName + ".png",
                 "PNG Files (*.png)\0*.png\0All Files (*.*)\0*.*\0",
@@ -88,7 +91,6 @@ int main() {
             );
 
             if (!pngPath.empty()) {
-                // Loại bỏ phần mở rộng nếu có để tránh trùng lặp
                 string basePath = pngPath;
                 size_t lastDot = basePath.find_last_of('.');
                 if (lastDot != string::npos) {
@@ -96,15 +98,16 @@ int main() {
                 }
 
                 if (scanner.saveHighQualityDoc(scannedDoc, basePath)) {
-                    cout << "1. Da luu anh: " << basePath << ".png" << endl;
-                } else {
-                    cout << "Loi: Khong the luu anh PNG!" << endl;
+                    cout << " [OK] Image Saved: " << basePath << ".png" << endl;
+                }
+                else {
+                    cout << " [ERR] Failed to save PNG!" << endl;
                 }
 
-                // 3. Hỏi có muốn lưu PDF không
-                cout << "Ban co muon luu thanh PDF khong? (Nhan 'p' de luu PDF)" << endl;
+                // Lưu pdf
+                cout << "Do you want to export as PDF? (Press 'p' to confirm)" << endl;
                 char pdfChoice = (char)waitKey(0);
-                
+
                 if (pdfChoice == 'p' || pdfChoice == 'P') {
                     string pdfPath = DocumentScanner::getSaveFilePath(
                         defaultName + ".pdf",
@@ -114,19 +117,22 @@ int main() {
 
                     if (!pdfPath.empty()) {
                         if (scanner.saveDocToPDF(scannedDoc, pdfPath)) {
-                            cout << "2. Da luu PDF: " << pdfPath << endl;
-                        } else {
-                            cout << "Loi: Khong the luu file PDF!" << endl;
+                            cout << " [OK] PDF Saved: " << pdfPath << endl;
                         }
-                    } else {
-                        cout << "Da huy luu PDF." << endl;
+                        else {
+                            cout << " [ERR] Failed to save PDF!" << endl;
+                        }
+                    }
+                    else {
+                        cout << " PDF export cancelled." << endl;
                     }
                 }
-            } else {
-                cout << "Da huy luu file." << endl;
+            }
+            else {
+                cout << " Save cancelled." << endl;
             }
 
-            cout << ">>> Hoan tat!" << endl;
+            cout << ">>> Ready for next scan." << endl;
         }
     }
 
