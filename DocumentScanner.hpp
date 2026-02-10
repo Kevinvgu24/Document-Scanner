@@ -1,39 +1,36 @@
-﻿#pragma once
+#pragma once
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <string>
 
 class DocumentScanner {
 private:
-    const float TARGET_WIDTH = 800.0f;
-    const float TARGET_HEIGHT = 1130.0f;
+    // A4 paper size at high DPI (for print quality)
+    const float TARGET_WIDTH = 2480.0f;
+    const float TARGET_HEIGHT = 3508.0f;
     std::vector<cv::Point2f> dst_pts;
 
-    // --- KHÔNG CẦN CÁC BIẾN GPU NỮA ---
-    // Thay vào đó ta dùng biến cục bộ trong hàm để tiết kiệm RAM
-
-    // Hàm phụ trợ
+    // Helper: Sort points (Top-Left, Top-Right, Bottom-Right, Bottom-Left)
     std::vector<cv::Point2f> orderPoints(const std::vector<cv::Point>& pts);
 
-    // Xử lý ảnh trên CPU
-    void autoBrightness(cv::Mat& img);
-    void sharpenImage(cv::Mat& img);
+    // Filter: The core algorithm to remove grid lines and enhance text
+    void applyScannerFilter(cv::Mat& img);
 
 public:
     DocumentScanner();
 
-    // Hàm tìm giấy (Trả về ảnh Threshold để debug và danh sách điểm)
+    // Tìm góc và khoanh vùng tài liệu
     cv::Mat detectDocument(const cv::Mat& src_frame, std::vector<cv::Point>& detected_points);
 
-    // Hàm cắt ảnh và xử lý hậu kỳ
+	// Bọc ảnh dựa trên các điểm đã phát hiện
     cv::Mat getWarpedImage(const cv::Mat& src_frame, const std::vector<cv::Point>& points);
 
-    // Lưu file
+    // Lưu ảnh png
     bool saveHighQualityDoc(const cv::Mat& doc_img, const std::string& filenameBase);
 
-	// Lưu PDF
+    // Lưu file pdf
     bool saveDocToPDF(const cv::Mat& doc_img, const std::string& filename);
 
-    // Hàm mở hộp thoại chọn vị trí lưu file
+	// Mở hộp thoại lưu file
     static std::string getSaveFilePath(const std::string& defaultName, const std::string& filter, const std::string& defaultExt);
 };
